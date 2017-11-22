@@ -21,8 +21,8 @@ import static java.lang.Math.abs;
 
 public class ZeGaugeView extends View {
 
-    private static final String TAG = "ZeGaugeView";
     public static final int TEXT_INCREASE_RANGE = 20;
+    private static final String TAG = "ZeGaugeView";
     private Paint paint;
     private Paint paintBackGround;
     private double arrowAngle = -90;
@@ -172,13 +172,10 @@ public class ZeGaugeView extends View {
     private void drawTextStep(Canvas canvas, int cx, int cy, int textAngle) {
         String text = String.valueOf(textAngle);
         float difference = (float) abs(textAngle - this.arrowAngle);
-        if (difference < TEXT_INCREASE_RANGE) {//draw bigger
-            float sizeToIncrease = 1 + ((TEXT_INCREASE_RANGE - difference) / TEXT_INCREASE_RANGE * 0.5f);
-            textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp * sizeToIncrease, getContext()));
-            textPaint.setColor(Color.WHITE);
+        if (difference < TEXT_INCREASE_RANGE) {
+            drawBiggerText(difference);
         } else {
-            textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp, getContext()));
-            textPaint.setColor(Color.LTGRAY);
+            drawNormalText();
         }
 
         Rect rect = new Rect();
@@ -187,6 +184,17 @@ public class ZeGaugeView extends View {
         int textMargin = Unit.convertDpToPixels(20, getContext());
         PointF textPoint = getPointForAngle(textAngle, (getViewRadius()) - rect.height() - textMargin - getBiggerMarkersHeight(), cx, cy);
         canvas.drawText(text, textPoint.x - rect.width(), textPoint.y + rect.height(), textPaint);
+    }
+
+    private void drawNormalText() {
+        textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp, getContext()));
+        textPaint.setColor(Color.LTGRAY);
+    }
+
+    private void drawBiggerText(float difference) {
+        float sizeToIncrease = 1 + ((TEXT_INCREASE_RANGE - difference) / TEXT_INCREASE_RANGE * 0.5f);
+        textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp * sizeToIncrease, getContext()));
+        textPaint.setColor(Color.WHITE);
     }
 
     private Bitmap makeRadGrad() {

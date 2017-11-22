@@ -173,10 +173,12 @@ public class ZeGaugeView extends View {
         String text = String.valueOf(textAngle);
         float difference = (float) abs(textAngle - this.arrowAngle);
         if (difference < TEXT_INCREASE_RANGE) {//draw bigger
-            float sizeToIncrease = 1 + ((TEXT_INCREASE_RANGE - difference) * 0.05f);
+            float sizeToIncrease = 1 + ((TEXT_INCREASE_RANGE - difference) / TEXT_INCREASE_RANGE * 0.5f);
             textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp * sizeToIncrease, getContext()));
+            textPaint.setColor(Color.WHITE);
         } else {
             textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp, getContext()));
+            textPaint.setColor(Color.LTGRAY);
         }
 
         Rect rect = new Rect();

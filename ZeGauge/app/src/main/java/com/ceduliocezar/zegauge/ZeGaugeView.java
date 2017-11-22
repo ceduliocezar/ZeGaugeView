@@ -22,13 +22,19 @@ import static java.lang.Math.abs;
 public class ZeGaugeView extends View {
 
     public static final int TEXT_INCREASE_RANGE = 20;
-    private static final String TAG = "ZeGaugeView";
     private Paint paint;
     private Paint paintBackGround;
     private double arrowAngle = -90;
     private Paint arrowPaint;
     private Paint textPaint;
     private int textSizeInSp = 20;
+    private Paint smallMarkerPaint;
+    private Paint mediumMarkerPaint;
+    private Paint biggerMarkerPaint;
+    private Paint gradientPaint;
+
+    private int startAngle;
+    private int endAngle;
 
     public ZeGaugeView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -42,6 +48,9 @@ public class ZeGaugeView extends View {
 
     private void init() {
 
+        startAngle = -260;
+        endAngle = 0;
+
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp, getContext()));
@@ -54,11 +63,31 @@ public class ZeGaugeView extends View {
         arrowPaint.setColor(Color.parseColor("#EC615D"));
         arrowPaint.setTextSize(Unit.convertSpToPixels(10, getContext()));
 
-
         paintBackGround = new Paint(Paint.ANTI_ALIAS_FLAG);
         paintBackGround.setStyle(Paint.Style.STROKE);
         paintBackGround.setColor(Color.WHITE);
         paintBackGround.setStrokeWidth(Unit.convertDpToPixels(5, getContext()));
+
+        smallMarkerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        smallMarkerPaint.setColor(Color.GRAY);
+        smallMarkerPaint.setStyle(Paint.Style.STROKE);
+        smallMarkerPaint.setStrokeWidth(Unit.convertDpToPixels(2, getContext()));
+
+        mediumMarkerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mediumMarkerPaint.setColor(Color.WHITE);
+        mediumMarkerPaint.setStyle(Paint.Style.STROKE);
+        mediumMarkerPaint.setStrokeWidth(Unit.convertDpToPixels(2, getContext()));
+
+        biggerMarkerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        biggerMarkerPaint.setColor(Color.WHITE);
+        biggerMarkerPaint.setStyle(Paint.Style.STROKE);
+        biggerMarkerPaint.setStrokeWidth(Unit.convertDpToPixels(4, getContext()));
+
+        gradientPaint = new Paint();
+        gradientPaint.setDither(true);
+
+        gradientPaint.setStyle(Paint.Style.STROKE);
+        gradientPaint.setStrokeWidth(Unit.convertDpToPixels(20, getContext()));
     }
 
 
@@ -66,95 +95,85 @@ public class ZeGaugeView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        int cx = getWidth() / 2;
-        int cy = getHeight() / 2;
-
         drawBackgroundBorder(canvas);
         drawGradientBackground(canvas);
-        drawMarkers(canvas, cx, cy);
-        drawArrow(canvas, cx, cy);
-        drawLabels(canvas, cx, cy);
+        drawMarkers(canvas);
+        drawArrow(canvas);
+        drawLabels(canvas);
     }
 
     private void drawGradientBackground(Canvas canvas) {
         canvas.drawBitmap(makeRadialGradient(), 0, 0, new Paint(Paint.ANTI_ALIAS_FLAG));
-
     }
 
-
-    private void drawMarkers(Canvas canvas, int cx, int cy) {
-        drawSmallMarkers(canvas, cx, cy);
-        drawMediumMarkers(canvas, cx, cy);
-        drawBiggerMarkers(canvas, cx, cy);
+    private void drawMarkers(Canvas canvas) {
+        drawSmallMarkers(canvas);
+        drawMediumMarkers(canvas);
+        drawBiggerMarkers(canvas);
     }
 
-    private void drawSmallMarkers(Canvas canvas, int cx, int cy) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.GRAY);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(Unit.convertDpToPixels(2, getContext()));
-
+    private void drawSmallMarkers(Canvas canvas) {
+        float centerX = getCenterX();
+        int centerY = getCenterY();
         int markerPadding = Unit.convertDpToPixels(5, getContext());
         int viewRadius = getViewRadius();
 
         Path path = new Path();
 
-        for (int angle = -260; angle <= 0; angle += 2) {
-            PointF markerPoint = getPointForAngle(angle, viewRadius - markerPadding, cx, cy);
+        for (int angle = startAngle; angle <= endAngle; angle += 2) {
+            PointF markerPoint = getPointForAngle(angle, viewRadius - markerPadding, centerX, centerY);
 
             int markersHeight = Unit.convertDpToPixels(4, getContext());
-            PointF pointForAngleLeftBase = getPointForAngle(angle, viewRadius - markersHeight - markerPadding, cx, cy);
+            PointF pointForAngleLeftBase = getPointForAngle(angle, viewRadius - markersHeight - markerPadding, centerX, centerY);
 
             path.moveTo(markerPoint.x, markerPoint.y);
             path.lineTo(pointForAngleLeftBase.x, pointForAngleLeftBase.y);
 
         }
-        canvas.drawPath(path, paint);
+        canvas.drawPath(path, smallMarkerPaint);
     }
 
-    private void drawMediumMarkers(Canvas canvas, int cx, int cy) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.WHITE);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(Unit.convertDpToPixels(3, getContext()));
+    private void drawMediumMarkers(Canvas canvas) {
 
+        float centerX = getCenterX();
+        int centerY = getCenterY();
         int markerPadding = Unit.convertDpToPixels(5, getContext());
         int markersHeight = Unit.convertDpToPixels(14, getContext());
         int viewRadius = getViewRadius();
 
         Path path = new Path();
-        for (int angle = -250; angle < 0; angle += 20) {
-            PointF markerPoint = getPointForAngle(angle, viewRadius - markerPadding, cx, cy);
-            PointF pointForAngleLeftBase = getPointForAngle(angle, viewRadius - markersHeight - markerPadding, cx, cy);
+        for (int angle = startAngle; angle < endAngle; angle += 10) {
+            PointF markerPoint = getPointForAngle(angle, viewRadius - markerPadding, centerX, centerY);
+            PointF pointForAngleLeftBase = getPointForAngle(angle, viewRadius - markersHeight - markerPadding, centerX, centerY);
 
             path.moveTo(markerPoint.x, markerPoint.y);
             path.lineTo(pointForAngleLeftBase.x, pointForAngleLeftBase.y);
 
         }
-        canvas.drawPath(path, paint);
+
+        canvas.drawPath(path, mediumMarkerPaint);
     }
 
-    private void drawBiggerMarkers(Canvas canvas, int cx, int cy) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.WHITE);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(Unit.convertDpToPixels(4, getContext()));
+    private void drawBiggerMarkers(Canvas canvas) {
+
+        float centerX = getCenterX();
+        int centerY = getCenterY();
 
         int markerPadding = Unit.convertDpToPixels(5, getContext());
         int markersHeight = getBiggerMarkersHeight();
         int viewRadius = getViewRadius();
 
         Path path = new Path();
-        for (int angle = -260; angle <= 0; angle += 20) {
-            PointF markerPoint = getPointForAngle(angle, viewRadius - markerPadding, cx, cy);
+        for (int angle = startAngle; angle <= endAngle; angle += 20) {
+            PointF markerPoint = getPointForAngle(angle, viewRadius - markerPadding, centerX, centerY);
 
-            PointF pointForAngleLeftBase = getPointForAngle(angle, viewRadius - markersHeight - markerPadding, cx, cy);
+            PointF pointForAngleLeftBase = getPointForAngle(angle, viewRadius - markersHeight - markerPadding, centerX, centerY);
 
             path.moveTo(markerPoint.x, markerPoint.y);
             path.lineTo(pointForAngleLeftBase.x, pointForAngleLeftBase.y);
 
         }
-        canvas.drawPath(path, paint);
+        canvas.drawPath(path, biggerMarkerPaint);
     }
 
     private int getBiggerMarkersHeight() {
@@ -176,14 +195,18 @@ public class ZeGaugeView extends View {
         return (int) (diameter - paintBackGround.getStrokeWidth());
     }
 
-    private void drawLabels(Canvas canvas, int cx, int cy) {
-        for (int textAngle = -260; textAngle <= 0; textAngle += 20) {
-            drawTextStep(canvas, cx, cy, textAngle);
+    private void drawLabels(Canvas canvas) {
+        int centerX = getCenterX();
+        int centerY = getCenterY();
+
+        for (int textAngle = startAngle; textAngle <= endAngle; textAngle += 20) {
+            drawTextStep(canvas, centerX, centerY, textAngle);
         }
     }
 
     private void drawTextStep(Canvas canvas, int cx, int cy, int textAngle) {
         String text = String.valueOf(textAngle);
+
         float difference = (float) abs(textAngle - this.arrowAngle);
         if (difference < TEXT_INCREASE_RANGE) {
             drawBiggerText(difference);
@@ -213,32 +236,32 @@ public class ZeGaugeView extends View {
 
     private Bitmap makeRadialGradient() {
         RectF componentRect = getComponentRect();
+
         RadialGradient gradient = new RadialGradient(componentRect.centerX(), componentRect.centerY(), getViewRadius() / 2 / 2, 0xFF000000,
                 0xFFFFFF, Shader.TileMode.CLAMP);
-        Paint p = new Paint();
-        p.setDither(true);
-        p.setShader(gradient);
-        p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(Unit.convertDpToPixels(10, getContext()));
+
+        gradientPaint.setShader(gradient);
 
         Bitmap bitmap = Bitmap.createBitmap((int) componentRect.width(), (int) componentRect.height(), Bitmap.Config.ARGB_8888);
-        Canvas c = new Canvas(bitmap);
-        c.drawCircle(componentRect.centerX(), componentRect.centerY(), getViewRadius() / 2 / 2, p);
+        Canvas bitmapCanvas = new Canvas(bitmap);
+        bitmapCanvas.drawCircle(componentRect.centerX(), componentRect.centerY(), getViewRadius() / 2 / 2, gradientPaint);
 
         return bitmap;
     }
 
-    private void drawArrow(Canvas canvas, int cx, int cy) {
+    private void drawArrow(Canvas canvas) {
         Path path = new Path();
 
-        path.moveTo(cx, cy);
+        float centerX = getCenterX();
+        int centerY = getCenterY();
+
+        path.moveTo(centerX, centerY);
+
         int baseWidth = Unit.convertDpToPixels(5, getContext());
+        PointF basePointAngle = getPointForAngle(arrowAngle, getViewRadius(), centerX, centerY);
 
-
-        PointF basePointAngle = getPointForAngle(arrowAngle, getViewRadius(), cx, cy);
-
-        PointF pointForAngleLeft = getPointForAngle(arrowAngle + 90, baseWidth, cx, cy);
-        PointF pointForAngleRight = getPointForAngle(arrowAngle - 90, baseWidth, cx, cy);
+        PointF pointForAngleLeft = getPointForAngle(arrowAngle + 90, baseWidth, centerX, centerY);
+        PointF pointForAngleRight = getPointForAngle(arrowAngle - 90, baseWidth, centerX, centerY);
 
         path.moveTo(basePointAngle.x, basePointAngle.y);
         path.lineTo(pointForAngleLeft.x, pointForAngleLeft.y);
@@ -247,13 +270,14 @@ public class ZeGaugeView extends View {
         path.close();
 
         canvas.drawPath(path, arrowPaint);
-        canvas.drawCircle(cx, cy, Unit.convertDpToPixels(10, getContext()), arrowPaint);
+        canvas.drawCircle(centerX, centerY, Unit.convertDpToPixels(10, getContext()), arrowPaint);
     }
 
     private void drawBackgroundBorder(Canvas canvas) {
 
         RectF rect = getComponentRect();
-        canvas.drawArc(rect, -260, 260, false, paintBackGround);
+
+        canvas.drawArc(rect, startAngle, Math.abs(Math.abs(startAngle) - Math.abs(endAngle)), false, paintBackGround);
     }
 
     @NonNull
@@ -306,7 +330,7 @@ public class ZeGaugeView extends View {
 
         float x = event.getX();
         float y = event.getY();
-      
+
         if (!isTouchInsideGauge(x, y)) {
             return true;
         }
@@ -318,13 +342,22 @@ public class ZeGaugeView extends View {
         return true;
     }
 
+    public void setStartAngle(int startAngle) {
+        this.startAngle = startAngle;
+        invalidate();
+    }
+
+    public void setEndAngle(int endAngle) {
+        this.endAngle = endAngle;
+        invalidate();
+    }
+
     public void setArrowAngle(double arrowAngle) {
         this.arrowAngle = -360 + arrowAngle;
-        Log.d(TAG, "Angle set:" + arrowAngle);
 
         invalidate();
     }
-  
+
     private boolean isTouchInsideGauge(float x, float y) {
         return Math.pow(x - getCenterX(), 2) + Math.pow(y - getCenterY(), 2) < Math.pow(getViewRadius(), 2);
     }

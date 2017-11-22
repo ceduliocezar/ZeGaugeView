@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         viewById.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                viewById1.setAngle(i);
+                viewById1.setArrowAngle(i);
             }
 
             @Override

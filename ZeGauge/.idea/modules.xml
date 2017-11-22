@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ZeGauge.iml" filepath="$PROJECT_DIR$/ZeGauge.iml" />
+      <module fileurl="file://C:\Pixida\Git\Samples\ZeGaugeView\ZeGauge\ZeGauge.iml" filepath="C:\Pixida\Git\Samples\ZeGaugeView\ZeGauge\ZeGauge.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Pixida\Git\Samples\ZeGaugeView\ZeGauge\app\app.iml" filepath="C:\Pixida\Git\Samples\ZeGaugeView\ZeGauge\app\app.iml" />
     </modules>
   </component>
 </project>

@@ -17,13 +17,18 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import static java.lang.Math.abs;
+
 public class ZeGaugeView extends View {
 
+    public static final int TEXT_INCREASE_RANGE = 20;
+    private static final String TAG = "ZeGaugeView";
     private Paint paint;
     private Paint paintBackGround;
-    private double angle = -90;
+    private double arrowAngle = -90;
     private Paint arrowPaint;
     private Paint textPaint;
+    private int textSizeInSp = 20;
 
     public ZeGaugeView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -39,7 +44,7 @@ public class ZeGaugeView extends View {
 
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(Unit.convertSpToPixels(20, getContext()));
+        textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp, getContext()));
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(Color.WHITE);
@@ -172,21 +177,38 @@ public class ZeGaugeView extends View {
     }
 
     private void drawLabels(Canvas canvas, int cx, int cy) {
-        for (int angle = -260; angle <= 0; angle += 20) {
-            drawTextStep(canvas, cx, cy, angle);
+        for (int textAngle = -260; textAngle <= 0; textAngle += 20) {
+            drawTextStep(canvas, cx, cy, textAngle);
         }
     }
 
-    private void drawTextStep(Canvas canvas, int cx, int cy, int angle) {
-        String text = String.valueOf(angle);
+    private void drawTextStep(Canvas canvas, int cx, int cy, int textAngle) {
+        String text = String.valueOf(textAngle);
+        float difference = (float) abs(textAngle - this.arrowAngle);
+        if (difference < TEXT_INCREASE_RANGE) {
+            drawBiggerText(difference);
+        } else {
+            drawNormalText();
+        }
 
         Rect rect = new Rect();
         paint.getTextBounds(text, 0, text.length(), rect);
 
         int textMargin = Unit.convertDpToPixels(20, getContext());
-        PointF textPoint = getPointForAngle(angle, (getViewRadius()) - rect.height() - textMargin - getBiggerMarkersHeight(), cx, cy);
 
+        PointF textPoint = getPointForAngle(textAngle, (getViewRadius()) - rect.height() - textMargin - getBiggerMarkersHeight(), cx, cy);
         canvas.drawText(text, textPoint.x - rect.width(), textPoint.y + rect.height(), textPaint);
+    }
+
+    private void drawNormalText() {
+        textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp, getContext()));
+        textPaint.setColor(Color.LTGRAY);
+    }
+
+    private void drawBiggerText(float difference) {
+        float sizeToIncrease = 1 + ((TEXT_INCREASE_RANGE - difference) / TEXT_INCREASE_RANGE * 0.5f);
+        textPaint.setTextSize(Unit.convertSpToPixels(textSizeInSp * sizeToIncrease, getContext()));
+        textPaint.setColor(Color.WHITE);
     }
 
     private Bitmap makeRadialGradient() {
@@ -213,10 +235,10 @@ public class ZeGaugeView extends View {
         int baseWidth = Unit.convertDpToPixels(5, getContext());
 
 
-        PointF basePointAngle = getPointForAngle(angle, getViewRadius(), cx, cy);
+        PointF basePointAngle = getPointForAngle(arrowAngle, getViewRadius(), cx, cy);
 
-        PointF pointForAngleLeft = getPointForAngle(angle + 90, baseWidth, cx, cy);
-        PointF pointForAngleRight = getPointForAngle(angle - 90, baseWidth, cx, cy);
+        PointF pointForAngleLeft = getPointForAngle(arrowAngle + 90, baseWidth, cx, cy);
+        PointF pointForAngleRight = getPointForAngle(arrowAngle - 90, baseWidth, cx, cy);
 
         path.moveTo(basePointAngle.x, basePointAngle.y);
         path.lineTo(pointForAngleLeft.x, pointForAngleLeft.y);
@@ -268,8 +290,14 @@ public class ZeGaugeView extends View {
     }
 
     private double getAngleForPoint(float x, float y, float cx, float cy) {
-
-        return Math.toDegrees(Math.atan2(y - cy, x - cx));
+        double angle;
+        double rawAngle = Math.toDegrees(Math.atan2(y - cy, x - cx));
+        if (rawAngle > 0) {
+            angle = -180 - (180 - rawAngle);
+        } else {
+            angle = rawAngle;
+        }
+        return angle;
     }
 
 
@@ -278,28 +306,27 @@ public class ZeGaugeView extends View {
 
         float x = event.getX();
         float y = event.getY();
-
+      
         if (!isTouchInsideGauge(x, y)) {
             return true;
         }
 
-        angle = getAngleForPoint(x, y, getCenterX(), getCenterY());
+        arrowAngle = getAngleForPoint(x, y, getCenterX(), getCenterY());
 
         invalidate();
 
         return true;
     }
 
-    private boolean isTouchInsideGauge(float x, float y) {
+    public void setArrowAngle(double arrowAngle) {
+        this.arrowAngle = -360 + arrowAngle;
+        Log.d(TAG, "Angle set:" + arrowAngle);
 
-        return Math.pow(x - getCenterX(), 2) + Math.pow(y - getCenterY(), 2) < Math.pow(getViewRadius(), 2);
-
-
-    }
-
-    public void setAngle(double angle) {
-        this.angle = angle;
         invalidate();
+    }
+  
+    private boolean isTouchInsideGauge(float x, float y) {
+        return Math.pow(x - getCenterX(), 2) + Math.pow(y - getCenterY(), 2) < Math.pow(getViewRadius(), 2);
     }
 }
 
